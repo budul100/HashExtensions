@@ -8,16 +8,38 @@ namespace Extensions
     {
         #region Private Fields
 
-        private const int HashLength = 8;
+        // Defined by int.MaxValue
+        private const int HashLength = 9;
+
+        private static readonly double hashMaximumValue;
+        private static readonly double hashReducedValue;
 
         #endregion Private Fields
+
+        #region Public Constructors
+
+        static HashExtensions()
+        {
+            hashReducedValue = Math.Pow(10, HashLength - 1);
+            hashMaximumValue = Math.Pow(10, HashLength) - hashReducedValue;
+        }
+
+        #endregion Public Constructors
 
         #region Public Methods
 
         public static int GetSequenceHash
             (params object[] sequence)
         {
-            return sequence?.ToArray().GetSequenceHash() ?? 0;
+            return sequence?.ToArray()
+                .GetSequenceHash() ?? 0;
+        }
+
+        public static int GetSequenceHash<T>
+            (params Func<T, object>[] properties)
+        {
+            return properties?.ToArray()
+                .GetSequenceHash() ?? 0;
         }
 
         public static int GetSequenceHash<T>
@@ -30,21 +52,38 @@ namespace Extensions
             {
                 var result = sequence?.Aggregate(
                     seed: seed,
-                    func: (current, item) => (current * modifier) + (item?.GetHashCode() ?? 0)) ?? 0;
+                    func: (c, i) => (c * modifier) + (i?.GetHashCode() ?? 0)) ?? 0;
                 return result;
             }
         }
 
         public static int GetSequenceHash<T, TProperty>
-            (this IEnumerable<T> sequence, Func<T, TProperty> property)
-            where TProperty : class
+            (this T[] sequence, Func<T, TProperty> property)
         {
-            return sequence?.ToArray().Select(property)?.GetSequenceHash() ?? 0;
+            return sequence?.ToArray()
+                .GetSequenceHash(property) ?? 0;
+        }
+
+        public static int GetSequenceHash<T, TProperty>
+            (this IEnumerable<T> sequence, Func<T, TProperty> property)
+        {
+            var chain = sequence?
+                .Select(property)?
+                .ToArray();
+
+            return chain.GetSequenceHash();
+        }
+
+        public static int GetSequenceHash<T>
+            (this IEnumerable<T> sequence, params Func<T, object>[] properties)
+        {
+            return sequence
+                .GetSequenceHashes(properties)
+                .GetSequenceHash();
         }
 
         public static int GetSequenceHashDirected<T, TProperty>
             (this T[] sequence, Func<T, TProperty> property)
-            where TProperty : class
         {
             return sequence?.ToArray()
                 .GetSequenceHashDirected(property) ?? 0;
@@ -52,7 +91,6 @@ namespace Extensions
 
         public static int GetSequenceHashDirected<T, TProperty>
             (this IEnumerable<T> sequence, Func<T, TProperty> property)
-            where TProperty : class
         {
             var hash = sequence.GetSequenceHash(property);
 
@@ -81,47 +119,57 @@ namespace Extensions
         }
 
         public static int GetStaticHash
-            (this IEnumerable<object> value, int? length = HashLength)
+            (params string[] values)
         {
-            var result = 0;
-
-            if (value != null)
-            {
-                foreach (var v in value)
-                {
-                    result += v.GetStaticHash(length ?? HashLength);
-                }
-            }
-
-            return result.GetStaticHash(length ?? HashLength);
+            return values.GetStaticHash();
         }
 
         public static int GetStaticHash
-            (this object value, int? length = HashLength)
+            (this IEnumerable<string> values)
         {
-            var len = length ?? HashLength;
-            var result = value.GetStaticHash(len).ToString("D" + len);
+            var result = 0;
 
-            return Convert.ToInt32(result);
+            if (values != null)
+            {
+                foreach (var v in values)
+                {
+                    result += v.GetStaticHashValue();
+                }
+            }
+
+            return result.ToString().GetStaticHash();
+        }
+
+        public static int GetStaticHash
+            (this string value)
+        {
+            return value.GetStaticHashValue();
         }
 
         #endregion Public Methods
 
         #region Private Methods
 
-        private static int GetStaticHash
-            (this object value, int length)
+        private static IEnumerable<int> GetSequenceHashes<T, TProperty>
+            (this IEnumerable<T> sequence, Func<T, TProperty>[] properties)
+        {
+            foreach (var p in properties)
+            {
+                yield return sequence.GetSequenceHash(p);
+            }
+        }
+
+        private static int GetStaticHashValue(this string value)
         {
             var result = 0;
-            var text = value?.ToString();
 
-            if (!string.IsNullOrWhiteSpace(text) && length > 0)
+            if (!string.IsNullOrWhiteSpace(value))
             {
                 uint hash = 0;
 
                 // if you care this can be done much faster with unsafe
                 // using fixed char* reinterpreted as a byte*
-                foreach (byte b in System.Text.Encoding.Unicode.GetBytes(text))
+                foreach (byte b in System.Text.Encoding.Unicode.GetBytes(value))
                 {
                     hash += b;
                     hash += (hash << 10);
@@ -133,13 +181,10 @@ namespace Extensions
                 hash ^= (hash >> 11);
                 hash += (hash << 15);
 
-                // Ensure that no values with a leading zero can be created
-                var reducedValue = Math.Pow(10, length - 1);
-                var maximumValue = Math.Pow(10, length) - reducedValue;
-
                 // helpfully we only want positive integer < MUST_BE_LESS_THAN
                 // so simple truncate cast is ok if not perfect
-                result = (int)((hash % maximumValue) + reducedValue);
+                // Ensure that no values with a leading zero can be created
+                result = (int)((hash % hashMaximumValue) + hashReducedValue);
             }
 
             return result;
