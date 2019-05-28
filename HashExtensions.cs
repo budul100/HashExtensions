@@ -11,50 +11,46 @@ namespace Extensions
         // Defined by int.MaxValue
         private const int HashLength = 9;
 
-        private static readonly double hashMaximumValue;
-        private static readonly double hashReducedValue;
-
         #endregion Private Fields
-
-        #region Public Constructors
-
-        static HashExtensions()
-        {
-            hashReducedValue = Math.Pow(10, HashLength - 1);
-            hashMaximumValue = Math.Pow(10, HashLength) - hashReducedValue;
-        }
-
-        #endregion Public Constructors
 
         #region Public Methods
 
         public static int GetSequenceHash
             (params object[] sequence)
         {
-            return sequence?.ToArray()
-                .GetSequenceHash() ?? 0;
+            return sequence?.GetSequenceHash() ?? 0;
         }
 
         public static int GetSequenceHash<T>
             (params Func<T, object>[] properties)
         {
-            return properties?.ToArray()
-                .GetSequenceHash() ?? 0;
+            return properties?.GetSequenceHash() ?? 0;
         }
 
         public static int GetSequenceHash<T>
             (this IEnumerable<T> sequence)
         {
-            const int seed = 487;
-            const int modifier = 31;
+            var result = 0;
 
-            unchecked
+            if (sequence?.Any() ?? false)
             {
-                var result = sequence?.Aggregate(
-                    seed: seed,
-                    func: (c, i) => (c * modifier) + (i?.GetHashCode() ?? 0)) ?? 0;
-                return result;
+                const int seed = 17;
+                const int modifier = 23;
+
+                var hash = 17;
+
+                result = sequence.ToArray()
+                    .Aggregate(
+                        seed: seed,
+                        func: (c, i) =>
+                        {
+                            var h = EqualityComparer<T>.Default.GetHashCode(i);
+                            if (h != 0) hash = unchecked(hash * h);
+                            return (c * modifier) + (hash);
+                        });
             }
+
+            return result;
         }
 
         public static int GetSequenceHash<T, TProperty>
@@ -87,6 +83,27 @@ namespace Extensions
         {
             return sequence?.ToArray()
                 .GetSequenceHashDirected(property) ?? 0;
+        }
+
+        public static int GetSequenceHashDirected<T>
+            (params T[] sequence)
+        {
+            return sequence?.ToArray()
+                .GetSequenceHashDirected() ?? 0;
+        }
+
+        public static int GetSequenceHashDirected<T>
+            (this IEnumerable<T> sequence)
+        {
+            var hash = sequence.GetSequenceHash();
+
+            var reverseHash = sequence?
+                .Reverse()
+                .GetSequenceHash() ?? 0;
+
+            var result = hash < reverseHash ? hash : reverseHash;
+
+            return result;
         }
 
         public static int GetSequenceHashDirected<T, TProperty>
@@ -133,7 +150,7 @@ namespace Extensions
             {
                 foreach (var v in values)
                 {
-                    result += v.GetStaticHashValue();
+                    result += v.GetStaticHashValue(HashLength);
                 }
             }
 
@@ -141,9 +158,14 @@ namespace Extensions
         }
 
         public static int GetStaticHash
-            (this string value)
+            (this string value, int length = HashLength)
         {
-            return value.GetStaticHashValue();
+            if (length > HashLength)
+                throw new ArgumentException(
+                    message: $"The hash length cannot be greater than {HashLength}.",
+                    paramName: nameof(length));
+
+            return value.GetStaticHashValue(length);
         }
 
         #endregion Public Methods
@@ -159,12 +181,15 @@ namespace Extensions
             }
         }
 
-        private static int GetStaticHashValue(this string value)
+        private static int GetStaticHashValue(this string value, int length)
         {
             var result = 0;
 
             if (!string.IsNullOrWhiteSpace(value))
             {
+                var hashReducedValue = Math.Pow(10, length - 1);
+                var hashMaximumValue = Math.Pow(10, length) - hashReducedValue;
+
                 uint hash = 0;
 
                 // if you care this can be done much faster with unsafe
