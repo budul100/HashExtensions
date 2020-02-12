@@ -123,8 +123,7 @@ namespace Extensions
         public static int GetSequenceHashOrdered<T>
             (params T[] sequence)
         {
-            return sequence?.ToArray()
-                .GetSequenceHashOrdered() ?? 0;
+            return sequence?.GetSequenceHashOrdered() ?? 0;
         }
 
         public static int GetSequenceHashOrdered<T>
@@ -148,9 +147,9 @@ namespace Extensions
 
             if (values != null)
             {
-                foreach (var v in values)
+                foreach (var value in values)
                 {
-                    result += v.GetStaticHashValue(HashLength);
+                    result += value.GetStaticHashValue(HashLength);
                 }
             }
 
@@ -175,9 +174,9 @@ namespace Extensions
         private static IEnumerable<int> GetSequenceHashes<T, TProperty>
             (this IEnumerable<T> sequence, Func<T, TProperty>[] properties)
         {
-            foreach (var p in properties)
+            foreach (var property in properties)
             {
-                yield return sequence.GetSequenceHash(p);
+                yield return sequence.GetSequenceHash(property);
             }
         }
 
@@ -194,9 +193,9 @@ namespace Extensions
 
                 // if you care this can be done much faster with unsafe
                 // using fixed char* reinterpreted as a byte*
-                foreach (byte b in System.Text.Encoding.Unicode.GetBytes(value))
+                foreach (var current in System.Text.Encoding.Unicode.GetBytes(value))
                 {
-                    hash += b;
+                    hash += current;
                     hash += (hash << 10);
                     hash ^= (hash >> 6);
                 }
