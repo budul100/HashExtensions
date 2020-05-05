@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <AssemblyName>HashExtensions</AssemblyName>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <Version>$(AssemblyVersion)</Version>
     <Authors>budul</Authors>
@@ -11,7 +11,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/budul100/HashExtensions</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageTags>Hash,"Hash calculation", "Enumerable hashes", "Enumerable hash calculation"</PackageTags>
+    <PackageTags>Hash,Hash calculation, Enumerable hashes, Enumerable hash calculation</PackageTags>
     <Description>Multiple extension methods to generate hashes from different data types</Description>
   </PropertyGroup>
 
