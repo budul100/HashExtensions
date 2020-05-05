@@ -10,11 +10,13 @@ namespace HashExtensions
     {
         #region Private Fields
 
+        private const string AllCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        private const string Digits = "0123456789";
+
         // Defined by ulong.MaxValue
         private const int HashLength = 19;
 
-        private const string HashAll = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        private const string HashDigits = "0123456789";
         private const string Separator = "\n";
 
         #endregion Private Fields
@@ -140,7 +142,10 @@ namespace HashExtensions
                     message: $"The hash length cannot be greater than {HashLength}.",
                     paramName: nameof(length));
 
-            var hashString = value.GetHashString(length, HashDigits);
+            var hashString = value.GetHashString(
+                length: length,
+                chars: Digits);
+
             var result = ulong.Parse(hashString).Limit(length);
 
             return result;
@@ -179,7 +184,9 @@ namespace HashExtensions
                     message: $"The hash length cannot be greater than {HashLength}.",
                     paramName: nameof(length));
 
-            var result = value.GetHashString(length);
+            var result = value.GetHashString(
+                length: length,
+                chars: AllCharacters);
 
             return result;
         }
@@ -188,8 +195,7 @@ namespace HashExtensions
 
         #region Private Methods
 
-        private static string GetHashString(this string value, int length,
-            string chars = HashAll)
+        private static string GetHashString(this string value, int length, string chars)
         {
             var bytes = Encoding.UTF8.GetBytes(value);
 
@@ -207,8 +213,7 @@ namespace HashExtensions
             return result;
         }
 
-        private static IEnumerable<int> GetSequenceHashes<T, TProperty>
-                    (this IEnumerable<T> items, Func<T, TProperty>[] properties)
+        private static IEnumerable<int> GetSequenceHashes<T, TProperty>(this IEnumerable<T> items, Func<T, TProperty>[] properties)
         {
             foreach (var property in properties)
             {
