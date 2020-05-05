@@ -11,7 +11,6 @@ namespace HashExtensions
         #region Private Fields
 
         private const string AllCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
         private const string Digits = "0123456789";
 
         // Defined by ulong.MaxValue
