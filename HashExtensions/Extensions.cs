@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -56,14 +57,25 @@ namespace HashExtensions
             var chain = items?
                 .Select(property)?.ToArray();
 
-            return chain.GetSequenceHash();
+            var result = chain.GetSequenceHash();
+
+            return result;
         }
 
         public static int GetSequenceHash<T>(this IEnumerable<T> items, params Func<T, object>[] properties)
         {
-            return items
+            var result = items
                 .GetSequenceHashes(properties)
                 .GetSequenceHash();
+
+            return result;
+        }
+
+        public static int GetSequenceHashDirected<T>(params T[] items)
+        {
+            var result = items?.GetSequenceHashDirected() ?? 0;
+
+            return result;
         }
 
         public static int GetSequenceHashDirected<T>(this IEnumerable<T> items)
@@ -83,29 +95,38 @@ namespace HashExtensions
 
         public static int GetSequenceHashDirected<T, TProperty>(this IEnumerable<T> items, Func<T, TProperty> property)
         {
-            var hash = items.GetSequenceHash(property);
+            var chain = items?
+                .Select(property)?.ToArray();
 
-            var reverseHash = items?
-                .Reverse()
-                .GetSequenceHash(property) ?? 0;
-
-            var result = hash < reverseHash
-                ? hash
-                : reverseHash;
+            var result = chain.GetSequenceHashDirected();
 
             return result;
         }
 
         public static int GetSequenceHashOrdered<T>(params T[] items)
         {
-            return items?.GetSequenceHashOrdered() ?? 0;
+            var result = items?.GetSequenceHashOrdered() ?? 0;
+
+            return result;
         }
 
         public static int GetSequenceHashOrdered<T>(this IEnumerable<T> items)
         {
-            return items?
+            var result = items?
                 .OrderBy(s => s)?
                 .GetSequenceHash() ?? 0;
+
+            return result;
+        }
+
+        public static int GetSequenceHashOrdered<T, TProperty>(this IEnumerable<T> items, Func<T, TProperty> property)
+        {
+            var chain = items?
+                .Select(property)?.ToArray();
+
+            var result = chain.GetSequenceHashOrdered();
+
+            return result;
         }
 
         public static ulong GetStaticHashNumber(params string[] values)
@@ -145,7 +166,9 @@ namespace HashExtensions
                 length: length,
                 chars: Digits);
 
-            var result = ulong.Parse(hashString).Limit(length);
+            var result = ulong.Parse(
+                s: hashString,
+                provider: CultureInfo.InvariantCulture).Limit(length);
 
             return result;
         }
