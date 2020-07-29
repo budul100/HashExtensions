@@ -145,11 +145,11 @@ namespace HashExtensions
 
             if (values?.Any() ?? false)
             {
-                var allValues = string.Join(
+                var merged = string.Join(
                     separator: Separator,
                     values: values);
 
-                result = allValues.GetStaticHashNumber(length);
+                result = merged.GetStaticHashNumber(length);
             }
 
             return result;
@@ -166,9 +166,14 @@ namespace HashExtensions
                 length: length,
                 chars: Digits);
 
-            var result = ulong.Parse(
-                s: hashString,
-                provider: CultureInfo.InvariantCulture).Limit(length);
+            var result = default(ulong);
+
+            if (!string.IsNullOrEmpty(hashString))
+            {
+                result = ulong.Parse(
+                    s: hashString ?? string.Empty,
+                    provider: CultureInfo.InvariantCulture).Limit(length);
+            }
 
             return result;
         }
@@ -219,18 +224,25 @@ namespace HashExtensions
 
         private static string GetHashString(this string value, int length, string chars)
         {
-            var bytes = Encoding.UTF8.GetBytes(value);
+            var result = default(string);
 
-            var hashString = new SHA256Managed();
-            var hash1 = hashString.ComputeHash(bytes);
-            var hash2 = new char[length];
-
-            for (var i = 0; i < hash2.Length; i++)
+            if (value != default)
             {
-                hash2[i] = chars[hash1[i] % chars.Length];
-            }
+                var bytes = Encoding.UTF8.GetBytes(value);
 
-            var result = new string(hash2);
+                using (var hashString = new SHA256Managed())
+                {
+                    var hash1 = hashString.ComputeHash(bytes);
+                    var hash2 = new char[length];
+
+                    for (var i = 0; i < hash2.Length; i++)
+                    {
+                        hash2[i] = chars[hash1[i] % chars.Length];
+                    }
+
+                    result = new string(hash2);
+                }
+            }
 
             return result;
         }
