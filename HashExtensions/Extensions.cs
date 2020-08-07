@@ -46,6 +46,8 @@ namespace HashExtensions
                     hash.Add(item);
                 }
 
+                hash.Add(items.Count());
+
                 result = hash.ToHashCode();
             }
 
