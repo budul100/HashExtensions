@@ -1,11 +1,48 @@
 using HashExtensions;
 using NUnit.Framework;
+using System;
+using System.Linq;
 
 namespace HashExtensionsTests
 {
     public class Tests
     {
+        #region Private Fields
+
+        private const int RandomTextLength = 10000000;
+
+        private static readonly Random random = new Random();
+
+        private readonly string randomText;
+
+        #endregion Private Fields
+
+        #region Public Constructors
+
+        public Tests()
+        {
+            randomText = RandomString(RandomTextLength);
+        }
+
+        #endregion Public Constructors
+
         #region Public Methods
+
+        [Test]
+        public void GetStaticHashNumber()
+        {
+            randomText.GetStaticHashNumber(1);
+
+            randomText.GetStaticHashNumber();
+        }
+
+        [Test]
+        public void GetStaticHashText()
+        {
+            randomText.GetStaticHashText(1);
+
+            randomText.GetStaticHashText();
+        }
 
         [Test]
         public void TestHashDirected()
@@ -66,15 +103,11 @@ namespace HashExtensionsTests
         {
             string.Empty.GetStaticHashNumber();
 
-            Assert.IsTrue(true);
-
             var hash = default(string).GetStaticHashNumber();
             Assert.IsTrue(hash == 0);
 
             var array = new string[] { string.Empty, default };
             array.GetStaticHashNumber();
-
-            Assert.IsTrue(true);
         }
 
         [Test]
@@ -95,5 +128,19 @@ namespace HashExtensionsTests
         }
 
         #endregion Public Methods
+
+        #region Private Methods
+
+        private static string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+            var result = Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray();
+
+            return new string(result);
+        }
+
+        #endregion Private Methods
     }
 }
