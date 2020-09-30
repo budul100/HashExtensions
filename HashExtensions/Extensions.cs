@@ -230,7 +230,8 @@ namespace HashExtensions
 
             if (!string.IsNullOrEmpty(value))
             {
-                var hashes = value.SpookyHash32().SplitEvenly(length);
+                var hashes = value.SpookyHash32()
+                    .SplitEvenly(length).ToArray();
 
                 var hashString = new StringBuilder();
 
@@ -274,6 +275,8 @@ namespace HashExtensions
 
         private static IEnumerable<int> SplitEvenly(this int number, int parts)
         {
+            number = Math.Abs(number);
+
             var digitsCount = Math.Floor(Math.Log10(number) + 1);
             var chunkSize = (digitsCount + parts - 1) / parts;
 

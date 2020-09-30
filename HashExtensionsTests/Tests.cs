@@ -31,17 +31,31 @@ namespace HashExtensionsTests
         [Test]
         public void GetStaticHashNumber()
         {
-            randomText.GetStaticHashNumber(1);
+            var result1 = randomText.GetStaticHashNumber(1);
+            var result2 = randomText.GetStaticHashNumber();
 
-            randomText.GetStaticHashNumber();
+            Assert.True(result1 != result2);
+        }
+
+        [Test]
+        public void GetStaticHashNumberNotNull()
+        {
+            var result1 = "ASTPAR".GetStaticHashNumber(8);
+
+            Assert.True(result1 != 0);
+
+            var result2 = "ASTPAS".GetStaticHashNumber(8);
+
+            Assert.True(result1 != result2);
         }
 
         [Test]
         public void GetStaticHashText()
         {
-            randomText.GetStaticHashText(1);
+            var result1 = randomText.GetStaticHashText(1);
+            var result2 = randomText.GetStaticHashText();
 
-            randomText.GetStaticHashText();
+            Assert.True(result1 != result2);
         }
 
         [Test]
