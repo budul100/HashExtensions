@@ -1,6 +1,6 @@
-﻿using SpookilySharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Data.HashFunction.SpookyHash;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -13,11 +13,11 @@ namespace HashExtensions
 
         private const string AllCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         private const string Digits = "0123456789";
-
-        // Defined by ulong.MaxValue
-        private const int HashLengthMax = 19;
-
+        private const int HashLengthMax = 19;   // Defined by ulong.MaxValue
         private const string Separator = "\n";
+
+        private static readonly UTF8Encoding encoding = new UTF8Encoding();
+        private static readonly ISpookyHashV2 hashCreator = SpookyHashV2Factory.Instance.Create();
 
         #endregion Private Fields
 
@@ -230,14 +230,18 @@ namespace HashExtensions
 
             if (!string.IsNullOrEmpty(value))
             {
-                var hashes = value.SpookyHash32()
+                var bytes = encoding.GetBytes(value);
+                var hashArray = hashCreator.ComputeHash(bytes).Hash;
+                var hashNumbers = BitConverter.ToInt32(
+                    value: hashArray,
+                    startIndex: 0)
                     .SplitEvenly(length).ToArray();
 
                 var hashString = new StringBuilder();
 
-                foreach (var hash in hashes)
+                foreach (var hashNumber in hashNumbers)
                 {
-                    var currentChar = availableChars[hash % availableChars.Length];
+                    var currentChar = availableChars[hashNumber % availableChars.Length];
                     hashString.Append(currentChar);
                 }
 
