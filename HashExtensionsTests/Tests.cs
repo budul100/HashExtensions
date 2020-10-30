@@ -29,9 +29,63 @@ namespace HashExtensionsTests
         #region Public Methods
 
         [Test]
+        public void GetStaticHashLength()
+        {
+            var length = 8;
+
+            var result1 = randomText.GetStaticHashText(length);
+
+            Assert.True(result1.Length == length);
+
+            var result2 = "1234567890".GetStaticHashText(length);
+
+            Assert.True(result2.Length == length);
+
+            var result3 = "1".GetStaticHashText(length);
+
+            Assert.True(result3.Length == length);
+        }
+
+        [Test]
+        public void GetStaticHashLengthMin()
+        {
+            var length = Extensions.HashLengthMin;
+
+            var result1 = randomText.GetStaticHashText(length);
+
+            Assert.True(result1.Length == length);
+
+            var result2 = "1234567890".GetStaticHashText(length);
+
+            Assert.True(result2.Length == length);
+
+            var result3 = "1".GetStaticHashText(length);
+
+            Assert.True(result3.Length == length);
+        }
+
+        [Test]
+        public void GetStaticHashLengthMax()
+        {
+            var length = Extensions.HashLengthMax;
+
+            var result1 = randomText.GetStaticHashText(length);
+
+            Assert.True(result1.Length == length);
+
+            var result2 = "1234567890".GetStaticHashText(length);
+
+            Assert.True(result2.Length == length);
+
+            var result3 = "1".GetStaticHashText(length);
+
+            Assert.True(result3.Length == length);
+        }
+
+        [Test]
         public void GetStaticHashNumber()
         {
-            var result1 = randomText.GetStaticHashNumber(1);
+            var result1 = randomText.GetStaticHashNumber(4);
             var result2 = randomText.GetStaticHashNumber();
 
             Assert.True(result1 != result2);
@@ -52,7 +106,7 @@ namespace HashExtensionsTests
         [Test]
         public void GetStaticHashText()
         {
-            var result1 = randomText.GetStaticHashText(1);
+            var result1 = randomText.GetStaticHashText(4);
             var result2 = randomText.GetStaticHashText();
 
             Assert.True(result1 != result2);

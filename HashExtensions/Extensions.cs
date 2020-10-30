@@ -9,11 +9,22 @@ namespace HashExtensions
 {
     public static class Extensions
     {
+        #region Public Fields
+
+        // Defined by length of hash creator output and ByteLength
+        public const int HashLengthMax = 12;
+
+        public const int HashLengthMin = 0;
+
+        #endregion Public Fields
+
         #region Private Fields
 
-        private const string AllCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        // Defined by int32
+        private const int ByteLength = 4;
+
+        private const string Characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         private const string Digits = "0123456789";
-        private const int HashLengthMax = 19;   // Defined by ulong.MaxValue
         private const string Separator = "\n";
 
         private static readonly UTF8Encoding encoding = new UTF8Encoding();
@@ -138,11 +149,6 @@ namespace HashExtensions
 
         public static ulong GetStaticHashNumber(this IEnumerable<string> values, int length = HashLengthMax)
         {
-            if (length > HashLengthMax)
-                throw new ArgumentException(
-                    message: $"The hash length cannot be greater than {HashLengthMax}.",
-                    paramName: nameof(length));
-
             var result = default(ulong);
 
             if (values?.Any() ?? false)
@@ -159,13 +165,18 @@ namespace HashExtensions
 
         public static ulong GetStaticHashNumber(this string value, int length = HashLengthMax)
         {
+            if (length <= HashLengthMin)
+                throw new ArgumentException(
+                    message: $"The hash length must be greater or equal to {HashLengthMin}.",
+                    paramName: nameof(length));
+
             if (length > HashLengthMax)
                 throw new ArgumentException(
                     message: $"The hash length cannot be greater than {HashLengthMax}.",
                     paramName: nameof(length));
 
             var hashString = value.GetHashString(
-                length: length,
+                size: length,
                 availableChars: Digits);
 
             var result = default(ulong);
@@ -187,11 +198,6 @@ namespace HashExtensions
 
         public static string GetStaticHashText(this IEnumerable<string> values, int length = HashLengthMax)
         {
-            if (length > HashLengthMax)
-                throw new ArgumentException(
-                    message: $"The hash length cannot be greater than {HashLengthMax}.",
-                    paramName: nameof(length));
-
             var result = default(string);
 
             if (values?.Any() ?? false)
@@ -208,14 +214,19 @@ namespace HashExtensions
 
         public static string GetStaticHashText(this string value, int length = HashLengthMax)
         {
+            if (length < HashLengthMin)
+                throw new ArgumentException(
+                    message: $"The hash length must be greater or equal to {HashLengthMin}.",
+                    paramName: nameof(length));
+
             if (length > HashLengthMax)
                 throw new ArgumentException(
                     message: $"The hash length cannot be greater than {HashLengthMax}.",
                     paramName: nameof(length));
 
             var result = value.GetHashString(
-                length: length,
-                availableChars: AllCharacters);
+                size: length,
+                availableChars: Characters);
 
             return result;
         }
@@ -224,25 +235,33 @@ namespace HashExtensions
 
         #region Private Methods
 
-        private static string GetHashString(this string value, int length, string availableChars)
+        private static string GetHashString(this string value, int size, string availableChars)
         {
             var result = default(string);
 
             if (!string.IsNullOrEmpty(value))
             {
                 var bytes = encoding.GetBytes(value);
-                var hashArray = hashCreator.ComputeHash(bytes).Hash;
-                var hashNumbers = BitConverter.ToInt32(
-                    value: hashArray,
-                    startIndex: 0)
-                    .SplitEvenly(length).ToArray();
+                var hash = hashCreator
+                    .ComputeHash(bytes).Hash;
 
                 var hashString = new StringBuilder();
 
-                foreach (var hashNumber in hashNumbers)
+                var position = 0;
+                var index = 0;
+                var length = hash.Length - ByteLength;
+
+                while (index <= length && position < size)
                 {
+                    var hashNumber = Math.Abs(BitConverter.ToInt32(
+                        value: hash,
+                        startIndex: index));
+
                     var currentChar = availableChars[hashNumber % availableChars.Length];
                     hashString.Append(currentChar);
+
+                    index += (length - index) / (size - position);
+                    position++;
                 }
 
                 result = hashString.ToString();
@@ -268,31 +287,9 @@ namespace HashExtensions
             return result;
         }
 
-        private static double Pow10(this double number)
+        private static int PartLength(int length, int parts)
         {
-            var result = Math.Pow(
-                x: 10,
-                y: number);
-
-            return result;
-        }
-
-        private static IEnumerable<int> SplitEvenly(this int number, int parts)
-        {
-            number = Math.Abs(number);
-
-            var digitsCount = Math.Floor(Math.Log10(number) + 1);
-            var chunkSize = (digitsCount + parts - 1) / parts;
-
-            for (double start = 0; start < digitsCount; start += chunkSize)
-            {
-                var current = number % (digitsCount - start).Pow10();
-
-                var end = digitsCount - start - chunkSize;
-                var result = (int)(current / end.Pow10());
-
-                yield return result;
-            }
+            return (length + parts - 1) / parts;
         }
 
         #endregion Private Methods
