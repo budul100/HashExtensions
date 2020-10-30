@@ -47,9 +47,9 @@ namespace HashExtensionsTests
         }
 
         [Test]
-        public void GetStaticHashLengthMin()
+        public void GetStaticHashLengthMax()
         {
-            var length = Extensions.HashLengthMin;
+            var length = Extensions.HashLengthMax;
 
             var result1 = randomText.GetStaticHashText(length);
 
@@ -65,9 +65,9 @@ namespace HashExtensionsTests
         }
 
         [Test]
-        public void GetStaticHashLengthMax()
+        public void GetStaticHashLengthMin()
         {
-            var length = Extensions.HashLengthMax;
+            var length = Extensions.HashLengthMin;
 
             var result1 = randomText.GetStaticHashText(length);
 
